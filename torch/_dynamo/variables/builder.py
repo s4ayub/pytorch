@@ -41,6 +41,7 @@ from ..source import (
     TupleIteratorGetItemSource,
 )
 from ..utils import (
+    attr_wrapper,
     clone_input,
     get_fake_value,
     getfile,
@@ -95,6 +96,7 @@ from .misc import (
 )
 from .nn_module import FSDPManagedNNModuleVariable, UnspecializedNNModuleVariable
 from .tensor import (
+    NumpyNdarrayVariable,
     SymNodeVariable,
     TensorVariable,
     TensorWithTFOverrideVariable,
@@ -252,6 +254,8 @@ class VariableBuilder:
                 cls.wrap_literal,
             ),
         ]
+        if config.numpy_ndarray_as_tensor:
+            entries.append((np.ndarray, cls.wrap_numpy_ndarray))
 
         result = {}
         for ts, fn in entries:
@@ -853,6 +857,42 @@ class VariableBuilder:
 
         return tensor_variable
 
+    def wrap_numpy_ndarray(self, value):
+        assert isinstance(value, np.ndarray)
+        arg_proxy = self.tx.output.root_tracer.create_graph_input(
+            re.sub(r"[^a-zA-Z0-9]+", "_", self.name), type(value)
+        )
+        source = self.get_source()
+        tensor_value = torch.from_numpy(value)
+        options = {"source": source}
+
+        numpy_ndarray_variable = wrap_fx_proxy_cls(
+            target_cls=NumpyNdarrayVariable,
+            tx=self.tx,
+            proxy=self.tx.output.create_proxy(
+                "call_function",
+                torch.from_numpy,
+                (arg_proxy,),
+                {},
+            ),
+            example_value=tensor_value,
+            **options,
+        )
+        self.tx.output.input_source_to_var[source] = numpy_ndarray_variable
+        example_value = numpy_ndarray_variable.proxy.node.meta["example_value"]
+
+        grapharg = GraphArg(
+            source,
+            tensor_value,
+            False,
+            example_value,
+            is_tensor=True,
+            example_strong_ref=tensor_value,
+        )
+        arg_proxy.node.meta["grapharg"] = grapharg
+
+        return numpy_ndarray_variable
+
     def wrap_unspecialized_primitive(self, value):
         if self.name in self.tx.output.unspec_variable_map:
             return self.tx.output.unspec_variable_map[self.name]
@@ -1141,12 +1181,15 @@ def wrap_fx_proxy_cls(
     elif proxy.node.target in [torch.cuda.streams.Stream, torch.cuda.current_stream]:
         proxy.node.meta["example_value"] = example_value
         return CUDAStreamVariable(proxy, example_value, **options)
-    elif config.numpy_ndarray_as_tensor and isinstance(example_value, torch_np.ndarray):
+    elif config.numpy_ndarray_as_tensor and isinstance(
+        example_value, (np.ndarray, torch_np.ndarray)
+    ):
         proxy.node.meta["example_value"] = example_value
         return target_cls(proxy, **options)
     elif isinstance(example_value, int) and proxy.node.target in [
         getattr,
         operator.getitem,
+        attr_wrapper,
     ]:
         proxy.node.meta["example_value"] = example_value
         return ConstantVariable(example_value, **options)
