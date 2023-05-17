@@ -253,7 +253,8 @@ Tensor polar(const Tensor& abs, const Tensor& angle) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ empty ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Tensor empty_cpu(IntArrayRef size, c10::optional<ScalarType> dtype_opt, c10::optional<Layout> layout_opt,
                  c10::optional<Device> device_opt, c10::optional<bool> pin_memory_opt, c10::optional<c10::MemoryFormat> memory_format_opt) {
-  return at::detail::empty_cpu(size, dtype_opt, layout_opt, device_opt, pin_memory_opt, memory_format_opt);
+  Tensor result = at::detail::empty_cpu(size, dtype_opt, layout_opt, device_opt, pin_memory_opt, memory_format_opt);
+  return maybe_fill_empty_deterministic(result);
 }
 
 Tensor empty_names(
@@ -320,7 +321,8 @@ Tensor empty_permuted_symint(SymIntArrayRef size, IntArrayRef physical_layout, c
 
 Tensor empty_strided_cpu(IntArrayRef size, IntArrayRef stride, c10::optional<ScalarType> dtype_opt,
                          c10::optional<Layout> layout_opt, c10::optional<Device> device_opt, c10::optional<bool> pin_memory_opt) {
-  return at::detail::empty_strided_cpu(size, stride, dtype_opt, layout_opt, device_opt, pin_memory_opt);
+  Tensor result = at::detail::empty_strided_cpu(size, stride, dtype_opt, layout_opt, device_opt, pin_memory_opt);
+  return maybe_fill_empty_deterministic(result);
 }
 
 Tensor& empty_out(IntArrayRef size,
@@ -337,7 +339,7 @@ Tensor& empty_out(IntArrayRef size,
   } else {
     result.resize_(size);
   }
-  return result;
+  return maybe_fill_empty_deterministic(result);
 }
 
 // Temporary type cast operators. These are needed to trace type-casts now since
