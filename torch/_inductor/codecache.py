@@ -204,6 +204,13 @@ def get_lock_dir():
     return lock_dir
 
 
+def get_vecISA_path(bitwidth):
+    isa_dir = os.path.join(cache_dir(), "check_vec_isa")
+    if not os.path.exists(isa_dir):
+        os.makedirs(isa_dir, exist_ok=True)
+    return isa_dir, os.path.join(isa_dir, "bitwidth_" + str(bitwidth) + ".txt")
+
+
 def code_hash(code):
     return (
         "c"
@@ -364,12 +371,24 @@ cdll.LoadLibrary("__lib_path__")
         if config.cpp.vec_isa_ok is not None:
             return config.cpp.vec_isa_ok
 
-        key, input_path = write(VecISA._avx_code, "cpp")
         from filelock import FileLock
 
         lock_dir = get_lock_dir()
-        lock = FileLock(os.path.join(lock_dir, key + ".lock"), timeout=LOCK_TIMEOUT)
-        with lock:
+        lock = FileLock(
+            os.path.join(lock_dir, str(self._bit_width) + "_vec.lock"),
+            timeout=LOCK_TIMEOUT,
+        )
+        _, isa_path = get_vecISA_path(self._bit_width)
+        print("[liaoxuan] isa_path: ", isa_path)
+        if os.path.exists(isa_path):
+            with lock, open(isa_path, "r") as isa_f:
+                check_isa_value = isa_f.read()
+                if check_isa_value in ["0", "1"]:
+                    print("[liaoxuan] exist_isa_value: ", check_isa_value)
+                    return bool(int(check_isa_value))
+
+        _, input_path = write(VecISA._avx_code, "cpp")
+        with lock, open(isa_path, "w") as isa_f:
             output_path = input_path[:-3] + "so"
             build_cmd = cpp_compile_command(
                 input_path, output_path, warning_all=False, vec_isa=self
@@ -386,8 +405,12 @@ cdll.LoadLibrary("__lib_path__")
                     stderr=subprocess.DEVNULL,
                 )
             except Exception as e:
+                print("[liaoxuan] compile false, ", e)
+                isa_f.write("0")
                 return False
 
+            print("[liaoxuan] compile true")
+            isa_f.write("1")
             return True
 
 
@@ -450,6 +473,7 @@ def valid_vec_isa_list():
         for isa in supported_vec_isa_list:
             if str(isa) in _cpu_info_content and isa:
                 isa_list.append(isa)
+        print("[liaoxuan] isa_list: ", isa_list)
         return isa_list
 
 
