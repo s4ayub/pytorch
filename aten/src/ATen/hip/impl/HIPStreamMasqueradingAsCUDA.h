@@ -92,8 +92,8 @@ private:
 };
 
 HIPStreamMasqueradingAsCUDA
-inline getStreamFromPoolMasqueradingAsCUDA(const bool isHighPriority = false, DeviceIndex device = -1) {
-  return HIPStreamMasqueradingAsCUDA(getStreamFromPool(isHighPriority, device));
+inline getStreamFromPoolMasqueradingAsCUDA(const bool priority = 0, DeviceIndex device = -1) {
+  return HIPStreamMasqueradingAsCUDA(getStreamFromPool(priority, device));
 }
 
 HIPStreamMasqueradingAsCUDA

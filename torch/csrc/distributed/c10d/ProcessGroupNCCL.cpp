@@ -1159,8 +1159,8 @@ std::vector<std::shared_ptr<NCCLComm>>& ProcessGroupNCCL::getNCCLComm(
     ncclComms[i] = NCCLComm::create(numRanks, rank, ncclID);
 
     // Creates the NCCL streams
-    streamVal.push_back(
-        at::cuda::getStreamFromPool(options_->is_high_priority_stream));
+    streamVal.push_back(at::cuda::getStreamFromPool(
+        options_->is_high_priority_stream ? -1 : 0));
   }
 
   // [Note 2 ]

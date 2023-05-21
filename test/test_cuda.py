@@ -1116,7 +1116,6 @@ class TestCuda(TestCase):
         self.assertEqual(torch.device('cuda:0'), s0.device)
 
         s1 = torch.cuda.Stream(device=1, priority=high)
-
         self.assertEqual(high, s1.priority)
         self.assertEqual(torch.device('cuda:1'), s1.device)
 

@@ -18,7 +18,7 @@ Pytorch's C++ API provides the following ways to acquire CUDA stream:
 
 .. code-block:: cpp
 
-  CUDAStream getStreamFromPool(const bool isHighPriority = false, DeviceIndex device = -1);
+  CUDAStream getStreamFromPool(const int priority = 0, DeviceIndex device = -1);
 
 .. tip::
 
@@ -105,7 +105,7 @@ CUDA Stream Usage Examples
   // create a tensor on device 0
   torch::Tensor tensor0 = torch::ones({2, 2}, torch::device(torch::kCUDA));
   // get a new stream from CUDA stream pool on device 0
-  at::cuda::CUDAStream myStream = at::cuda::getStreamFromPool(false, 0);
+  at::cuda::CUDAStream myStream = at::cuda::getStreamFromPool(0, 0);
   // set the current CUDA stream to `myStream` within the scope using CUDA stream guard
   {
     at::cuda::CUDAStreamGuard guard(myStream);
@@ -130,8 +130,8 @@ CUDA Stream Usage Examples
   // This example shows how to acquire and set CUDA stream on two devices.
 
   // acquire new CUDA streams from CUDA stream pool on device 0 and device 1
-  at::cuda::CUDAStream myStream0 = at::cuda::getStreamFromPool(false, 0);
-  at::cuda::CUDAStream myStream1 = at::cuda::getStreamFromPool(false, 1);
+  at::cuda::CUDAStream myStream0 = at::cuda::getStreamFromPool(0, 0);
+  at::cuda::CUDAStream myStream1 = at::cuda::getStreamFromPool(0, 1);
 
   // set current CUDA stream to `myStream0` on device 0
   at::cuda::setCurrentCUDAStream(myStream0);
@@ -156,7 +156,7 @@ CUDA Stream Usage Examples
   // current device is reset to device 0 after device_guard is destroyed
 
   // acquire a new CUDA stream on device 1
-  at::cuda::CUDAStream myStream1_1 = at::cuda::getStreamFromPool(false, 1);
+  at::cuda::CUDAStream myStream1_1 = at::cuda::getStreamFromPool(0, 1);
   // create a new tensor on device 1
   torch::Tensor tensor1 = torch::ones({2, 2}, torch::device({torch::kCUDA, 1}));
 
@@ -187,8 +187,8 @@ CUDA Stream Usage Examples
   torch::Tensor tensor1 = torch::ones({2, 2}, torch::device({torch::kCUDA, 1}));
 
   // acquire new CUDA streams from CUDA stream pool on device 0 and device 1
-  at::cuda::CUDAStream myStream0 = at::cuda::getStreamFromPool(false, 0);
-  at::cuda::CUDAStream myStream1 = at::cuda::getStreamFromPool(false, 1);
+  at::cuda::CUDAStream myStream0 = at::cuda::getStreamFromPool(0, 0);
+  at::cuda::CUDAStream myStream1 = at::cuda::getStreamFromPool(0, 1);
 
   // set current CUDA stream on device 0 to `myStream0` and
   // set current CUDA stream on device 1 to `myStream1` CUDA using multistream guard

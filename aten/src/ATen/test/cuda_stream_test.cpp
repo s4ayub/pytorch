@@ -196,8 +196,8 @@ TEST(TestStream, MultiGPUTest) {
   if (at::cuda::getNumGPUs() < 2)
     return;
 
-  at::cuda::CUDAStream s0 = at::cuda::getStreamFromPool(true, 0);
-  at::cuda::CUDAStream s1 = at::cuda::getStreamFromPool(false, 1);
+  at::cuda::CUDAStream s0 = at::cuda::getStreamFromPool(-1, 0); //high-priority
+  at::cuda::CUDAStream s1 = at::cuda::getStreamFromPool(0, 1);
 
   at::cuda::setCurrentCUDAStream(s0);
   at::cuda::setCurrentCUDAStream(s1);

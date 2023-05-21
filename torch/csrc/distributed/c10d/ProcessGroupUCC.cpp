@@ -1619,7 +1619,7 @@ void ProcessGroupUCC::initComm(c10::Device dev) {
   // Create UCC execution engine.
   if (!cuda_ee && dev.is_cuda()) {
     stream = std::make_unique<at::cuda::CUDAStream>(
-        at::cuda::getStreamFromPool(true, dev.index()));
+        at::cuda::getStreamFromPool(-1, dev.index()));
     ucc_ee_params_t params;
     params.ee_type = UCC_EE_CUDA_STREAM;
     params.ee_context = (void*)stream->stream();
