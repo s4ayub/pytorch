@@ -276,7 +276,7 @@ CUDAStream getStreamFromPool(const int priority, DeviceIndex device_index) {
       priority <= 0,
       "Expected cuda stream priority to be less than or equal to 0, got ",
       priority);
-
+  check_gpu(device_index);
   // Initializes the stream pools (once)
   c10::call_once(
       device_flags[device_index], initDeviceStreamState, device_index);
