@@ -56,6 +56,8 @@ load_tests = load_tests
 
 if platform == "darwin":
     LOOPBACK = "lo0"
+elif platform == "win32":
+    LOOPBACK = "Loopback Pseudo-Interface 1"
 else:
     LOOPBACK = "lo"
 
