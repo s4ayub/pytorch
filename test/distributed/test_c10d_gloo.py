@@ -43,6 +43,7 @@ from torch.testing._internal.common_distributed import (
     requires_gloo,
     simple_sparse_reduce_tests,
     skip_if_lt_x_gpu,
+    skip_if_win32,
     verify_ddp_error_logged,
 )
 from torch.testing._internal.common_utils import (
@@ -1407,6 +1408,7 @@ class ProcessGroupGlooTest(MultiProcessTestCase):
         for i, tensor in enumerate(tensors):
             self.assertEqual(torch.full(size, float(i * self.world_size)), tensor)
 
+    @skip_if_win32()
     @requires_gloo()
     def test_round_robin(self):
         num_process_groups = 2
@@ -1425,6 +1427,7 @@ class ProcessGroupGlooTest(MultiProcessTestCase):
             pg.broadcast(tensor, root=0).wait()
             self.assertEqual(torch.full([100, 100], 0.0), tensor)
 
+    @skip_if_win32()
     @requires_gloo()
     def test_round_robin_create_destroy(self):
         store = c10d.FileStore(self.file_name, self.world_size)
