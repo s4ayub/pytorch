@@ -471,6 +471,29 @@ def randn_like(self, *, dtype=None, device=None, **kwargs):
     )
 
 
+@register_decomposition(aten.empty_like)
+def empty_like(self, *, dtype=None, layout=None, device=None, **kwargs):
+    return torch.empty(
+        [*self.size()],
+        dtype=dtype or self.dtype,
+        layout=layout or self.layout,
+        device=device or self.device,
+        **kwargs,
+    )
+
+
+@register_decomposition(aten.full_like)
+def full_like(self, fill_value, *, dtype=None, layout=None, device=None, **kwargs):
+    return torch.full(
+        [*self.size()],
+        fill_value,
+        dtype=dtype or self.dtype,
+        layout=layout or self.layout,
+        device=device or self.device,
+        **kwargs,
+    )
+
+
 @register_decomposition(aten.randint_like.default)
 def randint_like(self, high, *, dtype=None, device=None, **kwargs):
     return aten.randint.low(
