@@ -24,9 +24,6 @@ static constexpr int kStreamsPerPool = 1 << kStreamsPerPoolBits;
 static constexpr unsigned int kDefaultFlags = cudaStreamNonBlocking;
 static constexpr int kStreamTypeBits = 3;
 
-// Note: lower numbers are higher priorities, zero is default priority
-static constexpr int kHighPriority = -1;
-static constexpr int kLowPriority = 0;
 static int max_stream_priorities;
 
 // Non-default streams
