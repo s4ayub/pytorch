@@ -2187,6 +2187,17 @@ class ComputedBuffer(Buffer):
                     self.data.get_size(),
                 )
 
+    def make_loader(self):
+        # Inline constants and index_expressions
+        can_inline = (
+            hasattr(self.data, "make_loader") and
+            self.name not in V.graph.mutated_buffers and
+            len(self.get_read_writes().reads) == 0
+        )
+        if can_inline:
+            return self.data.make_loader()
+        return super().make_loader()
+
     def get_store_function(self):
         indexer = self.layout.as_fixed().make_indexer()
         if self.data.get_reduction_type():
