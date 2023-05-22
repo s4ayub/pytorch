@@ -185,43 +185,44 @@ static void initDeviceStreamState(DeviceIndex device_index) {
       }
     }
   }
+}
 
-  // Init front-end to ensure initialization only occurs once
-  static void initCUDAStreamsOnce() {
-    // Inits default streams (once, globally)
-    c10::call_once(init_flag, initGlobalStreamState);
+// Init front-end to ensure initialization only occurs once
+static void initCUDAStreamsOnce() {
+  // Inits default streams (once, globally)
+  c10::call_once(init_flag, initGlobalStreamState);
 
-    if (current_streams) {
-      return;
-    }
-
-    // Inits current streams (thread local) to default streams
-    current_streams = std::make_unique<StreamId[]>(num_gpus);
-    for (const auto i : c10::irange(num_gpus)) {
-      current_streams[i] = makeStreamId(StreamIdType::DEFAULT, 0);
-    }
+  if (current_streams) {
+    return;
   }
 
-  // Helper to verify the GPU index is valid
-  static inline void check_gpu(DeviceIndex device_index) {
-    TORCH_INTERNAL_ASSERT(device_index >= 0 && device_index < num_gpus);
+  // Inits current streams (thread local) to default streams
+  current_streams = std::make_unique<StreamId[]>(num_gpus);
+  for (const auto i : c10::irange(num_gpus)) {
+    current_streams[i] = makeStreamId(StreamIdType::DEFAULT, 0);
   }
+}
 
-  // Helper to determine the index of the stream to return
-  // Note: Streams are returned round-robin (see note in CUDAStream.h)
-  static uint32_t get_idx(std::atomic<uint32_t> & counter) {
-    auto raw_idx = counter++;
-    return raw_idx % kStreamsPerPool;
-  }
+// Helper to verify the GPU index is valid
+static inline void check_gpu(DeviceIndex device_index) {
+  TORCH_INTERNAL_ASSERT(device_index >= 0 && device_index < num_gpus);
+}
 
-  CUDAStream CUDAStreamForId(DeviceIndex device_index, StreamId stream_id) {
-    return CUDAStream(
-        CUDAStream::UNCHECKED,
-        Stream(
-            Stream::UNSAFE,
-            c10::Device(DeviceType::CUDA, device_index),
-            stream_id));
-  }
+// Helper to determine the index of the stream to return
+// Note: Streams are returned round-robin (see note in CUDAStream.h)
+static uint32_t get_idx(std::atomic<uint32_t>& counter) {
+  auto raw_idx = counter++;
+  return raw_idx % kStreamsPerPool;
+}
+
+CUDAStream CUDAStreamForId(DeviceIndex device_index, StreamId stream_id) {
+  return CUDAStream(
+      CUDAStream::UNCHECKED,
+      Stream(
+          Stream::UNSAFE,
+          c10::Device(DeviceType::CUDA, device_index),
+          stream_id));
+}
 
 } // anonymous namespace
 
